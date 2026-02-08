@@ -1853,11 +1853,11 @@ local function fmod(a,b)
 end
 
 function QueryBotParty()
-    wait(0.1, function() SendBotCommand("#a ll ?"..CommandSeparator.."#a formation ?"..CommandSeparator.."#a stance ?"..CommandSeparator.."#a co ?"..CommandSeparator.."#a nc ?"..CommandSeparator.."#a save mana ?", "PARTY") end)
+    wait(0.1, function() SendBotCommand("#a strategies ?"..CommandSeparator.."#a ll ?"..CommandSeparator.."#a formation ?"..CommandSeparator.."#a stance ?"..CommandSeparator.."#a co ?"..CommandSeparator.."#a nc ?"..CommandSeparator.."#a save mana ?", "PARTY") end)
 end
 
 function QuerySelectedBot(name)
-    wait(0.1, function() SendBotCommand("#a formation ?"..CommandSeparator.."#a stance ?"..CommandSeparator.."#a ll ?"..CommandSeparator.."#a co ?"..CommandSeparator.."#a nc ?"..CommandSeparator.."#a save mana ?"..CommandSeparator.."#a rti ?", "WHISPER", nil, name) end)
+    wait(0.1, function() SendBotCommand("#a strategies ?"..CommandSeparator.."#a formation ?"..CommandSeparator.."#a stance ?"..CommandSeparator.."#a ll ?"..CommandSeparator.."#a co ?"..CommandSeparator.."#a nc ?"..CommandSeparator.."#a save mana ?"..CommandSeparator.."#a rti ?", "WHISPER", nil, name) end)
 end
 
 Mangosbot_EventFrame:SetScript("OnEvent", function(self)
@@ -2363,9 +2363,7 @@ function OnWhisper(message, sender)
         if (bot['strategy'] == nil) then
             bot['strategy'] = {nc = {}, co = {}}
         end
-        if (type == "co") then
-            bot["role"] = role
-        end
+        bot["role"] = role
         bot['strategy'][type] = list
     end
     if (string.find(message, 'Formation: ') == 1) then
@@ -2408,6 +2406,10 @@ function OnSystemMessage(message)
             end
             botTable[name]["class"] = cls
             botTable[name]["online"] = (on == "+")
+            botTable[name]["strategy"] = {nc = {}, co = {}}
+            if (botTable[name]["role"] == nil) then
+                botTable[name]["role"] = "dps"
+            end
         end
         return true
     end
