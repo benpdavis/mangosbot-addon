@@ -595,7 +595,7 @@ function CreateMovementToolBar(frame, y, name, group, x, spacing, register)
 
     tb["flee_passive"] = {
         icon = "flee_passive",
-        command = {[0] = "#a flee", [1] = "#a nc ?", [2] = "#a co ?"},
+        command = {[0] = "#a flee"},
         strategy = "",
         tooltip = "Ignore everything and follow master",
         index = index,
@@ -1853,11 +1853,11 @@ local function fmod(a,b)
 end
 
 function QueryBotParty()
-    wait(0.1, function() SendBotCommand("#a strategies ?"..CommandSeparator.."#a ll ?"..CommandSeparator.."#a formation ?"..CommandSeparator.."#a stance ?"..CommandSeparator.."#a co ?"..CommandSeparator.."#a nc ?"..CommandSeparator.."#a save mana ?", "PARTY") end)
+    wait(0.1, function() SendBotCommand("strategies ?"..CommandSeparator.."ll ?"..CommandSeparator.."formation ?"..CommandSeparator.."stance ?"..CommandSeparator.."co ?"..CommandSeparator.."nc ?"..CommandSeparator.."save mana ?", "PARTY") end)
 end
 
 function QuerySelectedBot(name)
-    wait(0.1, function() SendBotCommand("#a strategies ?"..CommandSeparator.."#a formation ?"..CommandSeparator.."#a stance ?"..CommandSeparator.."#a ll ?"..CommandSeparator.."#a co ?"..CommandSeparator.."#a nc ?"..CommandSeparator.."#a save mana ?"..CommandSeparator.."#a rti ?", "WHISPER", nil, name) end)
+    wait(0.1, function() SendBotCommand("formation ?"..CommandSeparator.."stance ?"..CommandSeparator.."ll ?"..CommandSeparator.."co ?"..CommandSeparator.."nc ?"..CommandSeparator.."save mana ?"..CommandSeparator.."rti ?", "WHISPER", nil, name) end)
 end
 
 Mangosbot_EventFrame:SetScript("OnEvent", function(self)
@@ -2154,25 +2154,25 @@ Mangosbot_EventFrame:SetScript("OnEvent", function(self)
                 QueryBotParty()
             end
             if (string.find(message, "Following") == 1 or string.find(message, "Staying") == 1 or string.find(message, "Fleeing") == 1) then
-                wait(0.1, function() SendBotAddonCommand("nc ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("nc ?", "WHISPER", nil, sender) end)
             end
             if (string.find(message, "Formation set to") == 1) then
-                wait(0.1, function() SendBotAddonCommand("formation ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("formation ?", "WHISPER", nil, sender) end)
             end
             if (string.find(message, "Stance set to") == 1) then
-                wait(0.1, function() SendBotAddonCommand("stance ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("stance ?", "WHISPER", nil, sender) end)
             end
             if (string.find(message, "Loot strategy set to ") == 1) then
-                wait(0.1, function() SendBotAddonCommand("ll ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("ll ?", "WHISPER", nil, sender) end)
             end
             if (string.find(message, "rti set to") == 1) then
-                wait(0.1, function() SendBotAddonCommand("rti ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("rti ?", "WHISPER", nil, sender) end)
             end
             if (string.find(message, "rti cc set to") == 1) then
-                wait(0.1, function() SendBotAddonCommand("rti cc ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("rti cc ?", "WHISPER", nil, sender) end)
             end
             if (string.find(message, "save mana") == 1) then
-                wait(0.1, function() SendBotAddonCommand("save mana ?", "WHISPER", nil, sender) end)
+                wait(0.1, function() SendBotCommand("save mana ?", "WHISPER", nil, sender) end)
             end
             UpdateGroupToolBar()
         end
