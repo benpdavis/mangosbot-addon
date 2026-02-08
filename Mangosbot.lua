@@ -17,13 +17,13 @@ local GroupToolBars = {}
 local CommandSeparator = "\\\\"
 local DropDownMenu = {}
 function SendBotCommand(text, chat, lang, channel)
-    if (chat == "PARTY" and partySize() == 0) then return end
+    -- Simply use SendChatMessage for everything to ensure the server sees it
     if (chat == "PARTY") then 
         if (GetNumRaidMembers() > 0) then chat = "RAID" end
-        SendAddonMessage("", text, chat, channel)
-    else
-        SendChatMessage(text, chat, lang, channel)
     end
+    
+    -- This sends the command as if you typed it in Party/Raid/Whisper
+    SendChatMessage(text, chat, lang, channel)
 end
 function SendBotAddonCommand(text, chat, lang, channel)
     SendBotCommand("#a "..text, chat, lang, channel)
