@@ -129,33 +129,34 @@ function ToolBarButtonOnClick(btn, visual)
     end
 
     if (visual) then
-        btn:SetBackdropBorderColor(0.8, 0.2, 0.2, 1.0)
+      btn:SetBackdropBorderColor(0.8, 0.2, 0.2, 1.0)
     end
 
     if (btn["emote"] ~= nil) then
         DoEmote(btn["emote"])
     end
 
-    -- Determine target and channel
-    local chatType = "WHISPER"
-    local target = GetUnitName("target")
-    if (target == nil) then target = CurrentBot end
-
     if (btn["group"]) then
-        chatType = "PARTY"
-        target = nil -- Channel name is not needed for PARTY chat
-    end
-
-    -- Process the command table
-    -- Using a small delay (0.1s) between lines to prevent server-side dropped packets
-    local i = 0
-    for key, command in orderedPairs(btn["command"]) do
-        if (command ~= "") then
-            wait(i * 0.1, function(cmd, chat, tgt) 
-                SendBotCommand(cmd, chat, nil, tgt) 
-            end, command, chatType, target)
-            i = i + 1
+        local delay = 0
+        local first = true
+        local combined = ""
+        for key, command in orderedPairs(btn["command"]) do
+            combined = combined..command..CommandSeparator
         end
+        combined = string.sub(combined, 1, string.len(combined) - 2)
+        wait(0, function(combined) SendBotCommand(combined, "PARTY") end, combined)
+        if (btn["tooltip"] ~= nil) then
+            wait(delay + 1, function(command) SendBotCommand(command, "PARTY") end, btn["tooltip"])
+        end
+    else
+        local bot = GetUnitName("target")
+        if (bot == nil) then bot = CurrentBot end
+        local combined = ""
+        for key, command in orderedPairs(btn["command"]) do
+            combined = combined..command..CommandSeparator
+        end
+        combined = string.sub(combined, 1, string.len(combined) - 2)
+        wait(0, function(combined, bot) SendBotCommand(combined, "WHISPER", nil, bot) end, combined, bot)
     end
 end
 
@@ -398,21 +399,7 @@ function CreateBotRoster()
             tooltip = "Remove all bots from group",
             strategy = "",
             index = 3
-        },
-		-- ADDED RESET BUTTON BELOW
-		["reset_group"] = {
-			icon = "revive", 
-			command = {
-				[0] = "#a nc -buff",
-				[1] = "#a nc -loot",
-				[2] = "#a nc -gather",
-				[3] = "#a co -potions",
-				[4] = "#a co -cast time"
-			},
-			tooltip = "Reset ALL bots behaviors",
-			index = 4,
-			group = true -- This ensures it sends to the PARTY channel
-		}
+        }
     }, 5, 0, false)
     frame.toolbar["quickbar"]:SetBackdropBorderColor(0,0,0,0.0)
 
@@ -755,7 +742,7 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
     return CreateToolBar(frame, -y, name, {
         ["food"] = {
             icon = "food",
-            command = {[0] = "#a nc +food"}, -- Forced ON syntax
+            command = {[0] = "#a nc +food"},
             strategy = "food",
             tooltip = "Use food and drinks",
             index = 0,
@@ -763,7 +750,9 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
         },
         ["buff"] = {
             icon = "bdps",
-            command = {[0] = "#a nc +buff"}, -- Using the working syntax you found
+            -- Change this to use the #a prefix and explicit toggle logic if supported, 
+            -- or use the known working command:
+            command = {[0] = "#a nc +buff"}, 
             strategy = "buff",
             tooltip = "Buff party members",
             index = 1,
@@ -779,93 +768,10 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
         },
         ["gather"] = {
             icon = "gather",
-            command = {[0] = "#a nc +gather"},
+            command = {[0] = "#a nc +gather,?"},
             strategy = "gather",
             tooltip = "Gather herbs, ore, etc.",
             index = 3,
-            group = group
-        }
-    }, x, spacing, register)
-end
-
-function CreateGenericCombatToolBar(frame, y, name, group, x, spacing, register)
-    return CreateToolBar(frame, -y, name, {
-        ["potions"] = {
-            icon = "potions",
-            command = {[0] = "#a co +potions"},
-            strategy = "potions",
-            tooltip = "Use health and mana potions",
-            index = 0,
-            group = group
-        },
-        ["cast_time"] = {
-            icon = "cast_time",
-            command = {[0] = "#a co +cast time"},
-            strategy = "cast time",
-            tooltip = "Do not cast long spells on low HP targets",
-            index = 1,
-            group = group
-        },
-        ["mark_rti"] = {
-            icon = "mark_rti",
-            command = {[0] = "#a co +mark rti"},
-            strategy = "mark rti",
-            tooltip = "Mark current target with raid icon",
-            index = 2,
-            group = group
-        },
-        ["ads"] = {
-            icon = "ads",
-            command = {[0] = "#a co +ads", [1] = "#a nc +ads"},
-            strategy = "ads",
-            tooltip = "Flee if ads might be pulled",
-            index = 3,
-            group = group
-        },
-        ["boost"] = {
-            icon = "boost",
-            command = {[0] = "#a co +boost"},
-            strategy = "boost",
-            tooltip = "Boost dps by using cooldowns",
-            index = 4,
-            group = group
-        },
-        ["conserve_mana"] = {
-            icon = "conserve_mana",
-            command = {[0] = "#a co +conserve mana"},
-            strategy = "conserve mana",
-            tooltip = "Reduce mana usage at cost of DPS",
-            index = 5,
-            group = group
-        },
-        ["cc"] = {
-            icon = "cc",
-            command = {[0] = "#a co +cc"},
-            strategy = "cc",
-            tooltip = "Use crowd control abilities",
-            index = 6,
-            group = group
-        }
-    }, x, spacing, register)
-end
-
-function CreateResetToolBar(frame, y, name, group, x, spacing, register)
-    return CreateToolBar(frame, -y, name, {
-        ["reset_all"] = {
-            icon = "revive", -- You can change this to a "clear" icon if you have one
-            command = {
-                [0] = "#a nc -buff",
-                [1] = "#a nc -loot",
-                [2] = "#a nc -gather",
-                [3] = "#a nc -food",
-                [4] = "#a co -potions",
-                [5] = "#a co -cast time",
-                [6] = "#a co -conserve mana",
-                [7] = "#a co -boost"
-            },
-            strategy = "",
-            tooltip = "Disable all behaviors (Reset)",
-            index = 0,
             group = group
         }
     }, x, spacing, register)
@@ -1707,20 +1613,6 @@ function CreateSelectedBotPanel()
             index = 4
         }
     })
-	
-	-- Inside CreateSelectedBotPanel function
-	local y = 25
-	CreateMovementToolBar(frame, y, "movement", false, 5, 5, true)
-
-	y = y + 25
-	CreateGenericNonCombatToolBar(frame, y, "non_combat", false, 5, 5, true)
-
-	y = y + 25
-	CreateGenericCombatToolBar(frame, y, "combat", false, 5, 5, true)
-
-	y = y + 25
-	-- ADD THIS LINE:
-	CreateResetToolBar(frame, y, "reset", false, 5, 5, true)
     
 
     frame:SetHeight(y + 25)
