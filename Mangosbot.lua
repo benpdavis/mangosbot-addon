@@ -2347,45 +2347,115 @@ function OnWhisper(message, sender)
     end
 
     local bot = botTable[sender]
-    if (string.find(message, 'Strategies: ') == 1) then
-        local list = {}
-        local type = "co"
-        local role = "dps"
-        local text = string.sub(message, 13)
-        local splitted = splitString2(text, ", ")
-        for i = 1, tablelength(splitted) do
-            local name = trim2(splitted[i])
-            table.insert(list, name)
-            if (name == "nc") then type = 'nc' end
-            if (name == "heal") then role = "heal" end
-            if (name == "tank" or name == "bear") then role = "tank" end
+    -- Be flexible about how newer AiPlayerbot builds format their replies.
+    -- We match on keywords instead of requiring the text to start at position 1.
+
+    local lowerMsg = string.lower(message or "")
+
+    -- Strategies / role (results of nc ?, co ?, all ?, etc.)
+    if (string.find(lowerMsg, 'strategies', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            text = string.sub(text, colonPos + 1)
+        else
+            -- Backward-compatible fallback for "Strategies: " at the beginning
+            if (string.find(text, 'Strategies: ', 1, true) == 1) then
+                text = string.sub(text, 13)
+            end
         end
-        if (bot['strategy'] == nil) then
-            bot['strategy'] = {nc = {}, co = {}}
+
+        text = trim2(text or "")
+        if (text ~= "") then
+            local list = {}
+            local stype = "co"
+            local role = bot["role"] or "dps"
+
+            -- Detect non-combat vs combat from the header text
+            if (string.find(lowerMsg, 'non combat strategies', 1, true) ~= nil or
+                string.find(lowerMsg, 'non-combat strategies', 1, true) ~= nil) then
+                stype = "nc"
+            elseif (string.find(lowerMsg, 'combat strategies', 1, true) ~= nil) then
+                stype = "co"
+            end
+
+            local splitted = splitString2(text, ",%s*")
+            for i = 1, tablelength(splitted) do
+                local name = trim2(splitted[i])
+                if (name ~= "") then
+                    table.insert(list, name)
+                    if (name == "heal") then role = "heal" end
+                    if (name == "tank" or name == "bear") then role = "tank" end
+                end
+            end
+            if (bot['strategy'] == nil) then
+                bot['strategy'] = {nc = {}, co = {}}
+            end
+            bot["role"] = role
+            bot['strategy'][stype] = list
         end
-        bot["role"] = role
-        bot['strategy'][type] = list
     end
-    if (string.find(message, 'Formation: ') == 1) then
-        bot['formation'] = string.sub(message, 11)
+
+    -- Formation/stance/savemana/loot/rti/rti_cc – accept messages that contain
+    -- the keywords anywhere and parse the value after the colon if present.
+    if (string.find(string.lower(message), 'formation', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            bot['formation'] = trim2(string.sub(text, colonPos + 1))
+        elseif (string.find(text, 'Formation: ', 1, true) == 1) then
+            bot['formation'] = string.sub(text, 11)
+        end
     end
-    if (string.find(message, 'Stance: ') == 1) then
-        bot['stance'] = string.sub(message, 11)
+
+    if (string.find(string.lower(message), 'stance', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            bot['stance'] = trim2(string.sub(text, colonPos + 1))
+        elseif (string.find(text, 'Stance: ', 1, true) == 1) then
+            bot['stance'] = string.sub(text, 11)
+        end
     end
-    if (string.find(message, 'Mana save level set: ') == 1) then
-        bot['savemana'] = string.sub(message, 21)
+
+    if (string.find(string.lower(message), 'mana save level', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            bot['savemana'] = trim2(string.sub(text, colonPos + 1))
+        elseif (string.find(text, 'Mana save level set: ', 1, true) == 1) then
+            bot['savemana'] = string.sub(text, 21)
+        elseif (string.find(text, 'Mana save level: ', 1, true) == 1) then
+            bot['savemana'] = string.sub(text, 17)
+        end
     end
-    if (string.find(message, 'Mana save level: ') == 1) then
-        bot['savemana'] = string.sub(message, 17)
+
+    if (string.find(string.lower(message), 'loot strategy', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            bot['loot'] = trim2(string.sub(text, colonPos + 1))
+        elseif (string.find(text, 'Loot strategy: ', 1, true) == 1) then
+            bot['loot'] = string.sub(text, 15)
+        end
     end
-    if (string.find(message, 'Loot strategy: ') == 1) then
-        bot['loot'] = string.sub(message, 15)
-    end
-    if (string.find(message, 'rti: ') == 1) then
-        bot['rti'] = string.sub(message, 5)
-    end
-    if (string.find(message, 'rti cc: ') == 1) then
-        bot['rti_cc'] = string.sub(message, 5)
+
+    if (string.find(string.lower(message), 'rti cc', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            bot['rti_cc'] = trim2(string.sub(text, colonPos + 1))
+        elseif (string.find(text, 'rti cc: ', 1, true) == 1) then
+            bot['rti_cc'] = string.sub(text, 5)
+        end
+    elseif (string.find(string.lower(message), 'rti', 1, true) ~= nil) then
+        local text = message
+        local colonPos = string.find(text, ":", 1, true)
+        if (colonPos ~= nil) then
+            bot['rti'] = trim2(string.sub(text, colonPos + 1))
+        elseif (string.find(text, 'rti: ', 1, true) == 1) then
+            bot['rti'] = string.sub(text, 5)
+        end
     end
 end
 
