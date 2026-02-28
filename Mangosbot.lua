@@ -595,7 +595,7 @@ function CreateMovementToolBar(frame, y, name, group, x, spacing, register)
 
     tb["flee_passive"] = {
         icon = "flee_passive",
-        command = {[0] = "#a flee"},
+        command = {[0] = "flee"},
         strategy = "",
         tooltip = "Ignore everything and follow master",
         index = index,
