@@ -1228,14 +1228,16 @@ function CreateSelectedBotPanel()
     CreateToolBar(frame, -y, "CLASS_MAGE", {
         ["arcane"] = {
             icon = "arcane",
-            command = {[0] = "co +arcane,?"},
+            -- Prefer arcane spec (and its PvE variant) and drop others
+            command = {[0] = "co +arcane,+arcane pve,-fire,-fire pve,-frost,-frost pve,?"},
             strategy = "arcane",
             tooltip = "Use arcane spells",
             index = 0
         },
         ["fire"] = {
             icon = "fire",
-            command = {[0] = "co +fire,?"},
+            -- Fire spec (matches 'fire' / 'fire pve' reported in logs)
+            command = {[0] = "co +fire,+fire pve,-arcane,-arcane pve,-frost,-frost pve,?"},
             strategy = "fire",
             tooltip = "Use fire spells",
             index = 1
@@ -1249,7 +1251,8 @@ function CreateSelectedBotPanel()
         },
         ["frost"] = {
             icon = "frost",
-            command = {[0] = "co +frost,?"},
+            -- Frost spec
+            command = {[0] = "co +frost,+frost pve,-arcane,-arcane pve,-fire,-fire pve,?"},
             strategy = "frost",
             tooltip = "Use frost spells",
             index = 3
@@ -1380,9 +1383,10 @@ function CreateSelectedBotPanel()
     CreateToolBar(frame, -y, "CLASS_ROGUE", {
         ["dps"] = {
             icon = "dps",
-            command = {[0] = "co +dps,?"},
-            strategy = "dps",
-            tooltip = "DPS mode",
+            -- Rogue DPS spec uses 'combat' strategies in this build.
+            command = {[0] = "co +combat,+combat pve,?"},
+            strategy = "combat",
+            tooltip = "Combat (DPS) mode",
             index = 0
         },
         ["aoe"] = {
@@ -1498,8 +1502,9 @@ function CreateSelectedBotPanel()
         },
         ["tank"] = {
             icon = "tank",
-            command = {[0] = "co +tank,?"},
-            strategy = "tank",
+            -- Warrior tank spec uses protection strategies in this build.
+            command = {[0] = "co +protection,+protection pve,-dps,?"},
+            strategy = "protection",
             tooltip = "Tank mode",
             index = 2
         }
