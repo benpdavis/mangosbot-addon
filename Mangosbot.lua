@@ -1286,22 +1286,28 @@ function CreateSelectedBotPanel()
     CreateToolBar(frame, -y, "CLASS_PALADIN", {
         ["dps"] = {
             icon = "dps",
-            command = {[0] = "co +dps,?"},
-            strategy = "dps",
-            tooltip = "DPS mode",
+            -- Paladin DPS mode uses retribution strategies in this build.
+            command = {[0] = "co +retribution,+retribution pve,-protection,-protection pve,-heal,?"},
+            strategy = "retribution",
+            role = "dps",
+            tooltip = "Retribution (DPS) mode",
             index = 0
         },
         ["tank"] = {
             icon = "tank",
-            command = {[0] = "co +tank,?"},
-            strategy = "tank",
+            -- Paladin tank mode uses protection strategies.
+            command = {[0] = "co +protection,+protection pve,-retribution,-retribution pve,-dps,-heal,?"},
+            strategy = "protection",
+            role = "tank",
             tooltip = "Tank mode",
             index = 1
         },
         ["heal"] = {
             icon = "heal",
-            command = {[0] = "co +heal,?"},
-            strategy = "heal",
+            -- Holy/heal mode.
+            command = {[0] = "co +heal,+holy,-protection,-protection pve,-retribution,-retribution pve,-dps,?"},
+            strategy = "holy",
+            role = "heal",
             tooltip = "Healer mode",
             index = 2
         },
@@ -1857,18 +1863,37 @@ function QueryBotParty()
 end
 
 function QuerySelectedBot(name)
-    wait(0.1, function() SendBotCommand("formation ?"..CommandSeparator.."stance ?"..CommandSeparator.."ll ?"..CommandSeparator.."co ?"..CommandSeparator.."nc ?"..CommandSeparator.."save mana ?"..CommandSeparator.."rti ?", "WHISPER", nil, name) end)
+    if (name == nil) then return end
+    wait(0.1, function()
+        SendBotCommand(
+            "formation ?"..CommandSeparator..
+            "stance ?"..CommandSeparator..
+            "ll ?"..CommandSeparator..
+            "co ?"..CommandSeparator..
+            "nc ?"..CommandSeparator..
+            "save mana ?"..CommandSeparator..
+            "rti ?",
+            "WHISPER", nil, name
+        )
+    end)
 end
 
 Mangosbot_EventFrame:SetScript("OnEvent", function(self)
     if (event == "PLAYER_TARGET_CHANGED") then
         local name = GetUnitName("target")
         local self = GetUnitName("player")
-        if (CurrentBot == nil and (name == nil or not UnitExists("target") or UnitIsEnemy("target", "player") or not UnitIsPlayer("target") or name == self)) then
+        local invalidTarget = (name == nil or not UnitExists("target") or UnitIsEnemy("target", "player") or not UnitIsPlayer("target") or name == self)
+
+        if (invalidTarget) then
+            -- Lost a valid bot target
+            CurrentBot = nil
             SelectedBotPanel:Hide()
         else
-            if (CurrentBot ~= name) then CurrentBot = nil end
-            QuerySelectedBot(name)
+            -- Only query when switching to a different bot via target
+            if (CurrentBot ~= name) then
+                CurrentBot = name
+                QuerySelectedBot(name)
+            end
         end
     end
 
@@ -1907,12 +1932,18 @@ Mangosbot_EventFrame:SetScript("OnEvent", function(self)
                 item.text:SetText(key)
                 item.cls["key"] = key
                 item.cls:SetScript("OnClick", function()
-                    if (CurrentBot == item.cls["key"]) then
+                    local keyName = item.cls["key"]
+                    if (CurrentBot == keyName) then
                         CurrentBot = nil
                         SelectedBotPanel:Hide()
                     else
-                        CurrentBot = item.cls["key"]
-                        QuerySelectedBot(CurrentBot)
+                        CurrentBot = keyName
+                        -- Avoid sending duplicate query if this bot is already the current target;
+                        -- in that case PLAYER_TARGET_CHANGED handler will query it.
+                        local targetName = GetUnitName("target")
+                        if (targetName ~= keyName) then
+                            QuerySelectedBot(CurrentBot)
+                        end
                     end
                 end)
 
@@ -2384,8 +2415,23 @@ function OnWhisper(message, sender)
                 local name = trim2(splitted[i])
                 if (name ~= "") then
                     table.insert(list, name)
-                    if (name == "heal") then role = "heal" end
-                    if (name == "tank" or name == "bear") then role = "tank" end
+
+                    -- Healer roles (including holy specs)
+                    if (name == "heal" or name == "holy") then
+                        role = "heal"
+                    end
+
+                    -- Tank roles (incl. protection variants and bear form)
+                    if (name == "tank" or name == "bear" or name == "protection" or name == "protection pve") then
+                        role = "tank"
+                    end
+
+                    -- Explicit DPS specs (e.g. retribution); only set if not already heal/tank
+                    if (name == "retribution" or name == "retribution pve") then
+                        if (role ~= "tank" and role ~= "heal") then
+                            role = "dps"
+                        end
+                    end
                 end
             end
             if (bot['strategy'] == nil) then
