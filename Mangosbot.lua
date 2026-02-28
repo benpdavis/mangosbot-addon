@@ -344,7 +344,7 @@ function CreateBotRoster()
             ["summon"] = {
                 icon = "summon",
                 command = {[0] = ""},
-                tooltip = "Summon at meeting stone",
+                tooltip = "Summon",
                 strategy = "",
                 index = 3
             },
