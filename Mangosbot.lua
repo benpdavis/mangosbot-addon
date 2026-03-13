@@ -563,7 +563,7 @@ function CreateMovementToolBar(frame, y, name, group, x, spacing, register)
     local tb = {
         ["follow_master"] = {
             icon = "follow_master",
-            command = {[0] = "#a follow"},
+            command = {[0] = "follow"},
             strategy = "follow",
             tooltip = "Follow me",
             index = 0,
@@ -572,9 +572,9 @@ function CreateMovementToolBar(frame, y, name, group, x, spacing, register)
         },
         ["stay"] = {
             icon = "stay",
-            command = {[0] = "#a stay"},
+            command = {[0] = "stay"},
             strategy = "stay",
-            tooltip = "Stay in place",
+            tooltip = "Stay",
             index = 1,
             group = group,
             emote = "wait"
@@ -584,7 +584,7 @@ function CreateMovementToolBar(frame, y, name, group, x, spacing, register)
     if (not group) then
         tb["runaway"] = {
             icon = "flee",
-            command = {[0] = "#a co ~runaway,?"},
+            command = {[0] = "co ~runaway,?"},
             strategy = "runaway",
             tooltip = "Run away from mobs",
             index = index,
@@ -742,7 +742,7 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
     return CreateToolBar(frame, -y, name, {
         ["food"] = {
             icon = "food",
-            command = {[0] = "#a nc +food"},
+            command = {[0] = "nc +food"},
             strategy = "food",
             tooltip = "Use food and drinks",
             index = 0,
@@ -752,7 +752,7 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
             icon = "bdps",
             -- Change this to use the #a prefix and explicit toggle logic if supported, 
             -- or use the known working command:
-            command = {[0] = "#a nc +buff"}, 
+            command = {[0] = "nc +buff"}, 
             strategy = "buff",
             tooltip = "Buff party members",
             index = 1,
@@ -760,7 +760,7 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
         },
         ["loot"] = {
             icon = "loot",
-            command = {[0] = "#a nc +loot"},
+            command = {[0] = "nc +loot"},
             strategy = "loot",
             tooltip = "Enable looting",
             index = 2,
@@ -768,7 +768,7 @@ function CreateGenericNonCombatToolBar(frame, y, name, group, x, spacing, regist
         },
         ["gather"] = {
             icon = "gather",
-            command = {[0] = "#a nc +gather,?"},
+            command = {[0] = "nc +gather,?"},
             strategy = "gather",
             tooltip = "Gather herbs, ore, etc.",
             index = 3,
